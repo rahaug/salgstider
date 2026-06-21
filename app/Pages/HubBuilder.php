@@ -47,6 +47,7 @@ class HubBuilder extends PageBuilder
         return [
             'theme' => $theme,
             'year' => $year,
+            'month' => MonthBuilder::MONTHS[$first->month],
             'storeClosingNote' => array_filter($days, fn (ClusterDay $d) => $this->classifier->isStoreClosingEve($d->date)) !== [],
             'hero' => [
                 'mode' => 'deadline',

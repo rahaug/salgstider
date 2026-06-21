@@ -10,10 +10,13 @@ class SitemapController extends Controller
 {
     public function __invoke(): Response
     {
-        $urls = array_map(
-            fn (DateSlug $slug) => url('/'.$slug->toString()),
-            DateSlug::all(),
-        );
+        $urls = [
+            url('/'),
+            ...array_map(
+                fn (DateSlug $slug) => url('/'.$slug->toString()),
+                DateSlug::all(),
+            ),
+        ];
 
         foreach (array_keys(config('themes')) as $slug) {
             $urls[] = url('/'.$slug);

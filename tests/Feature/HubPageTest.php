@@ -21,7 +21,8 @@ it('renders the paske hub with a compact deadline summary', function () {
         ->assertSee('10–16')
         ->assertDontSee('Siste sjanse til å kjøpe alkohol til påsken')
         ->assertSee('href="/27-mars"', false)      // påskeaften links to its date page
-        ->assertSee('Hvorfor feirer vi påske?');   // EF cross-link
+        ->assertSee('href="/mars"', false)         // link to the month page
+        ->assertSee('Se alle røde dager i mars');
 });
 
 it('labels cluster days by holiday name with date and links', function () {
