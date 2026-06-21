@@ -47,11 +47,6 @@ class MonthBuilder extends PageBuilder
         $heading = ucfirst($name);
 
         if ($redDays === []) {
-            $faq = [[
-                'q' => "Er det ølsalg i {$name} {$year}?",
-                'a' => "Ja, det er vanlige åpningstider hele {$name} – ingen røde dager. Øl i butikk selges til 20.00 på hverdager og 18.00 på lørdager. Søndag er det stengt.",
-            ]];
-
             return [
                 'name' => $name,
                 'heading' => $heading,
@@ -59,26 +54,10 @@ class MonthBuilder extends PageBuilder
                 'state' => 'empty',
                 'canonical' => url('/'.$name),
                 'description' => "Det er ingen røde dager i {$name} {$year} – vanlige åpningstider for ølsalg i butikk og Vinmonopolet hele måneden.",
+                'avvik' => ['scope' => $name, 'date' => null],
                 'week' => $this->week($start),
-                'faq' => $faq,
-                'schema' => $this->schema($faq),
             ];
         }
-
-        $first = $redDays[0];
-        $beerLast = $this->hours->previousOpen($first, ProductType::Beer);
-        $wineLast = $this->hours->previousOpen($first, ProductType::Wine);
-
-        $faq = [
-            [
-                'q' => "Når må jeg kjøpe alkohol før de røde dagene i {$name} {$year}?",
-                'a' => 'Hver røde dag har sin egen frist – se oversikten over. Siste salg er dagen før, eller før helgen når den røde dagen faller på en mandag.',
-            ],
-            [
-                'q' => "Er Vinmonopolet åpent på røde dager i {$name} {$year}?",
-                'a' => 'Nei, Vinmonopolet er stengt på røde dager. Handle dagen før.',
-            ],
-        ];
 
         return [
             'name' => $name,
@@ -87,19 +66,11 @@ class MonthBuilder extends PageBuilder
             'state' => 'avvik',
             'canonical' => url('/'.$name),
             'description' => "Røde dager og salgstider for øl og Vinmonopolet i {$name} {$year}.",
-            'intro' => "Her ser du de røde dagene i {$name} {$year} og når du må handle før hver av dem.",
+            'intro' => "Her ser du åpningstider og de røde dagene i {$name} {$year} og når du må handle før hver av dem.",
             'storeClosingNote' => $storeClosingNote,
-            'hero' => [
-                'mode' => 'deadline',
-                'occasion' => ucfirst($this->classifier->name($first) ?? $first->locale('nb')->dayName),
-                'shared' => $beerLast->date->isSameDay($wineLast->date),
-                'date' => $this->fullDate($beerLast->date),
-                'beer' => ['date' => $this->fullDate($beerLast->date), 'range' => $this->hours->on($beerLast->date, ProductType::Beer)->range()],
-                'wine' => ['date' => $this->fullDate($wineLast->date), 'range' => $this->hours->on($wineLast->date, ProductType::Wine)->range()],
-            ],
+            'avvik' => ['scope' => $name, 'date' => $redDays[0]],
+            'week' => $this->week($start),
             'rows' => array_map(fn (CarbonImmutable $day) => $this->deadlineRow($day), $redDays),
-            'faq' => $faq,
-            'schema' => $this->schema($faq),
         ];
     }
 
@@ -134,6 +105,10 @@ class MonthBuilder extends PageBuilder
             $monday = $monday->addDay();
         }
 
+        while ($this->weekHasHoliday($monday)) {
+            $monday = $monday->addDays(7);
+        }
+
         $rows = [];
 
         for ($i = 0; $i < 7; $i++) {
@@ -146,5 +121,18 @@ class MonthBuilder extends PageBuilder
         }
 
         return $rows;
+    }
+
+    private function weekHasHoliday(CarbonImmutable $monday): bool
+    {
+        for ($i = 0; $i < 7; $i++) {
+            $day = $monday->addDays($i);
+
+            if ($this->classifier->isNamedHoliday($day) || $this->classifier->isChristmasEve($day)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

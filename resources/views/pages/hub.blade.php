@@ -9,7 +9,7 @@
 @endpush
 
 @section('content')
-    <h1 class="text-2xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-3xl dark:text-white">Åpningstider for ølsalg og Vinmonopolet i {{ $theme['name'] }} {{ $year }}</h1>
+    <h1 class="text-3xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-4xl dark:text-white">Åpningstider for ølsalg og Vinmonopolet i {{ $theme['name'] }} {{ $year }}</h1>
     <p class="mt-2 max-w-prose leading-relaxed text-zinc-600 dark:text-zinc-300">{{ $theme['intro'] }}</p>
 
     <x-hero :hero="$hero" />

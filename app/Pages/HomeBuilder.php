@@ -2,13 +2,10 @@
 
 namespace App\Pages;
 
-use App\Enums\ProductType;
 use Carbon\CarbonImmutable;
 
 class HomeBuilder extends PageBuilder
 {
-    private const AVVIK_WINDOW_DAYS = 30;
-
     /** @return array<string, mixed> */
     public function build(): array
     {
@@ -17,102 +14,10 @@ class HomeBuilder extends PageBuilder
 
         return [
             'description' => 'Enkel oversikt over salgstider for øl i butikk og Vinmonopolet før røde dager, og resten av året.',
-            'today' => $this->today($today),
-            'nextAvvik' => $this->nextAvvik($today),
             'months' => $this->months($today),
             'faq' => $faq,
             'schema' => $this->schema($faq),
         ];
-    }
-
-    /** @return array{label: string, beer: array<string, mixed>, wine: array<string, mixed>} */
-    private function today(CarbonImmutable $today): array
-    {
-        return [
-            'label' => ucfirst($today->locale('nb')->isoFormat('dddd D. MMMM')),
-            'beer' => $this->status($today, ProductType::Beer),
-            'wine' => $this->status($today, ProductType::Wine),
-        ];
-    }
-
-    /** @return array{open: bool, range: ?string, next: ?array{day: string, opens: string}} */
-    private function status(CarbonImmutable $today, ProductType $type): array
-    {
-        $window = $this->hours->on($today, $type);
-
-        return [
-            'open' => $window->open,
-            'range' => $window->range(),
-            'next' => $window->open ? null : $this->nextOpen($today, $type),
-        ];
-    }
-
-    /** @return ?array{day: string, opens: string} */
-    private function nextOpen(CarbonImmutable $today, ProductType $type): ?array
-    {
-        $cursor = $today->addDay();
-
-        for ($i = 0; $i < 14; $i++) {
-            $window = $this->hours->on($cursor, $type);
-
-            if ($window->open) {
-                return [
-                    'day' => $cursor->isSameDay($today->addDay()) ? 'i morgen' : $cursor->locale('nb')->dayName,
-                    'opens' => str_ends_with($window->opens, ':00') ? substr($window->opens, 0, 2) : $window->opens,
-                ];
-            }
-
-            $cursor = $cursor->addDay();
-        }
-
-        return null;
-    }
-
-    /**
-     * The next real red day (a named holiday that closes beer). Always resolves to
-     * the next one within the year; `near` marks whether it falls inside the action
-     * window, in which case the binding buy-by deadline is included.
-     *
-     * @return ?array{slug: string, name: string, date: string, near: bool, deadline: ?string}
-     */
-    private function nextAvvik(CarbonImmutable $today): ?array
-    {
-        $date = $this->nextRedDay($today);
-
-        if ($date === null) {
-            return null;
-        }
-
-        $near = $date->lessThanOrEqualTo($today->addDays(self::AVVIK_WINDOW_DAYS));
-        $deadline = null;
-
-        if ($near) {
-            $beerLast = $this->hours->previousOpen($date, ProductType::Beer);
-            $wineLast = $this->hours->previousOpen($date, ProductType::Wine);
-            $binding = $beerLast->date->lessThan($wineLast->date) ? $beerLast->date : $wineLast->date;
-            $deadline = lcfirst($this->fullDate($binding));
-        }
-
-        return [
-            'slug' => (new DateSlug($date->day, $date->month))->toString(),
-            'name' => ucfirst($this->classifier->name($date) ?? $date->locale('nb')->dayName),
-            'date' => $date->locale('nb')->isoFormat('D. MMMM'),
-            'near' => $near,
-            'deadline' => $deadline,
-        ];
-    }
-
-    private function nextRedDay(CarbonImmutable $today): ?CarbonImmutable
-    {
-        $cursor = $today->addDay();
-
-        for ($i = 0; $i < 400; $i++, $cursor = $cursor->addDay()) {
-            if ($this->classifier->isNamedHoliday($cursor) && ! $this->hours->on($cursor, ProductType::Beer)->open) {
-                return $cursor;
-            }
-        }
-
-        return null;
     }
 
     /** @return list<array{slug: string, name: string, avvik: int, current: bool}> */

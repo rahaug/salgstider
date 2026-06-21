@@ -10,7 +10,7 @@
 
 @section('content')
     <p class="text-base font-medium text-zinc-700 dark:text-zinc-300">{{ $eyebrow }}</p>
-    <h1 class="mt-1.5 text-2xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-3xl dark:text-white">Åpningstider for ølsalg og Vinmonopolet {{ $heading }} {{ $year }}</h1>
+    <h1 class="mt-1.5 text-3xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-4xl dark:text-white">Åpningstider for ølsalg og Vinmonopolet {{ $heading }} {{ $year }}</h1>
     <p class="mt-3 text-lg leading-relaxed text-zinc-700 dark:text-zinc-300">{{ $lede }}</p>
 
     <x-hero :hero="$hero" />
