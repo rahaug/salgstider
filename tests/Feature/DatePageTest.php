@@ -1,5 +1,7 @@
 <?php
 
+use App\Pages\DatePageBuilder;
+use App\Pages\DateSlug;
 use Carbon\CarbonImmutable;
 
 beforeEach(function () {
@@ -8,6 +10,15 @@ beforeEach(function () {
 
 afterEach(function () {
     CarbonImmutable::setTestNow();
+});
+
+it('splits beer and wine deadlines around christmas', function () {
+    $hero = app(DatePageBuilder::class)
+        ->build(DateSlug::parse('25-desember'))['hero'];
+
+    expect($hero['shared'])->toBeFalse()
+        ->and($hero['beer']['date'])->toContain('24. desember')   // øl, julaften
+        ->and($hero['wine']['date'])->toContain('23. desember');  // Polet shut on julaften
 });
 
 it('renders a normal open day', function () {
@@ -35,9 +46,10 @@ it('links to the season hub and shows the cluster table on a date inside a seaso
         ->assertSee('Langfredag');
 });
 
-it('leads with the buy-by deadline on a closed red day', function () {
+it('shows the closed status and last-sale deadline on a closed red day', function () {
     $this->get('/17-mai')
-        ->assertSee('Kjøp alkohol til')
+        ->assertSee('Stengt')
+        ->assertSee('Siste salg')
         ->assertSee('Lørdag 15. mai');   // 2027: pinse coincides, last open day is sat 15 may
 });
 
@@ -71,9 +83,18 @@ it('404s on an unknown slug', function () {
     $this->get('/ikke-en-dato')->assertNotFound();
 });
 
-it('serves a sitemap listing date urls', function () {
+it('serves a sitemap listing date urls with a lastmod', function () {
     $this->get('/sitemap.xml')
         ->assertOk()
         ->assertHeader('Content-Type', 'application/xml')
-        ->assertSee(url('/16-mai'), false);
+        ->assertSee(url('/16-mai'), false)
+        ->assertSee('<lastmod>2026-05-17</lastmod>', false);   // 16 mai flipped to 2027 the day after it passed
+});
+
+it('omits lastmod on the home page', function () {
+    $home = '<loc>'.url('/').'</loc>';
+
+    $this->get('/sitemap.xml')
+        ->assertSee($home, false)
+        ->assertDontSee($home.'<lastmod>', false);
 });

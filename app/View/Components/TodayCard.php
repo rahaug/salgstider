@@ -36,8 +36,7 @@ class TodayCard extends Component
         $this->today = $this->buildToday($today);
 
         if ($avvik !== null) {
-            $this->card = $this->contextCard($avvik['scope'], $avvik['date'] ?? null);
-            $this->below = null;
+            [$this->card, $this->below] = $this->contextCard($today, $avvik['scope'], $avvik['date'] ?? null);
         } else {
             [$this->card, $this->below] = $this->globalCard($today);
         }
@@ -114,17 +113,23 @@ class TodayCard extends Component
     }
 
     /**
-     * Month pages: the next red day within that month. Quiet months show today only.
+     * Month pages: the month's next red day (in-card), or a no-red-days note plus
+     * the nationwide next red day below — so the info is never hidden.
      *
-     * @return ?array<string, mixed>
+     * @return array{0: array<string, mixed>, 1: ?array{slug: string, name: string, date: string}}
      */
-    private function contextCard(string $scope, ?CarbonImmutable $date): ?array
+    private function contextCard(CarbonImmutable $today, string $scope, ?CarbonImmutable $date): array
     {
-        if ($date === null) {
-            return null;
+        if ($date !== null) {
+            return [['zone' => 'action', 'label' => "Neste røde dag i {$scope}", 'deadline' => $this->deadline($date), ...$this->reference($date)], null];
         }
 
-        return ['zone' => 'action', 'label' => "Neste røde dag i {$scope}", 'deadline' => $this->deadline($date), ...$this->reference($date)];
+        $next = $this->nextRedDay($today);
+
+        return [
+            ['zone' => 'note', 'label' => "Neste røde dag i {$scope}", 'note' => 'Ingen denne måneden'],
+            $next !== null ? $this->reference($next) : null,
+        ];
     }
 
     /** @return array{slug: string, name: string, date: string} */

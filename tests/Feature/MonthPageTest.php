@@ -1,5 +1,6 @@
 <?php
 
+use App\Pages\MonthBuilder;
 use Carbon\CarbonImmutable;
 
 beforeEach(function () {
@@ -8,6 +9,15 @@ beforeEach(function () {
 
 afterEach(function () {
     CarbonImmutable::setTestNow();
+});
+
+it('splits beer and wine deadlines for christmas in the month table', function () {
+    $rows = app(MonthBuilder::class)->build(12)['rows'];
+    $juledag = collect($rows)->firstWhere('slug', '25-desember');
+
+    expect($juledag['deadline']['shared'])->toBeFalse()
+        ->and($juledag['deadline']['beer']['date'])->toContain('24. desember')
+        ->and($juledag['deadline']['wine']['date'])->toContain('23. desember');
 });
 
 it('lists each red day and its deadline for a month with avvik', function () {

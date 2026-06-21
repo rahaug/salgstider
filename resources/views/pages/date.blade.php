@@ -42,4 +42,15 @@
     @endif
 
     <x-faq :items="$faq" />
+
+    <nav class="mt-10 flex items-center justify-between border-t border-zinc-200 pt-5 text-sm dark:border-zinc-800">
+        <a href="/{{ $nav['prev']['slug'] }}" class="group inline-flex items-center gap-1.5 font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+            <span aria-hidden="true" class="transition group-hover:-translate-x-0.5">←</span>
+            {{ $nav['prev']['name'] }}
+        </a>
+        <a href="/{{ $nav['next']['slug'] }}" class="group inline-flex items-center gap-1.5 font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+            {{ $nav['next']['name'] }}
+            <span aria-hidden="true" class="transition group-hover:translate-x-0.5">→</span>
+        </a>
+    </nav>
 @endsection

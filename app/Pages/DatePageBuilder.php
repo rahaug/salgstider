@@ -8,6 +8,7 @@ use App\Calendar\LastSale;
 use App\Calendar\NotableDay;
 use App\Calendar\NotableDays;
 use App\Calendar\OpeningHours;
+use App\Calendar\SalesWindow;
 use App\Enums\ProductType;
 use Carbon\CarbonImmutable;
 
@@ -37,11 +38,7 @@ class DatePageBuilder extends PageBuilder
             wine: $this->hours->on($date, ProductType::Wine),
         );
 
-        $holidayName = match (true) {
-            $this->classifier->isNamedHoliday($date) => $this->classifier->name($date),
-            $this->classifier->isChristmasEve($date) => 'Julaften',
-            default => null,
-        };
+        $holidayName = $this->classifier->namedDay($date);
 
         $beerLast = $page->beer->open ? null : $this->hours->previousOpen($date, ProductType::Beer);
         $wineLast = $page->wine->open ? null : $this->hours->previousOpen($date, ProductType::Wine);
@@ -57,6 +54,7 @@ class DatePageBuilder extends PageBuilder
             'heading' => $holidayName ?? $page->label,
             'year' => $page->date->year,
             'month' => MonthBuilder::MONTHS[$date->month],
+            'nav' => $this->nav($date),
             'lede' => $this->lede($page, $holidayName, $beerLast, $wineLast, $beerDeadline, $wineDeadline),
             'hero' => $this->hero($page, $holidayName, $beerLast, $wineLast, $beerDeadline, $wineDeadline),
             'canonical' => url('/'.$slug->toString()),
@@ -74,32 +72,74 @@ class DatePageBuilder extends PageBuilder
         ];
     }
 
+    /** @return array{prev: array{slug: string, name: string}, next: array{slug: string, name: string}} */
+    private function nav(CarbonImmutable $date): array
+    {
+        return [
+            'prev' => $this->navItem($date->subDay()),
+            'next' => $this->navItem($date->addDay()),
+        ];
+    }
+
+    /** @return array{slug: string, name: string} */
+    private function navItem(CarbonImmutable $date): array
+    {
+        $slug = new DateSlug($date->day, $date->month);
+
+        return ['slug' => $slug->toString(), 'name' => $slug->label()];
+    }
+
     private function hero(DatePage $page, ?string $holidayName, ?LastSale $beerLast, ?LastSale $wineLast, ?string $beerDeadline, ?string $wineDeadline): array
     {
-        if ($page->beer->open || $page->wine->open) {
-            $deadline = $beerDeadline ?? $wineDeadline;
+        $deadline = $beerDeadline ?? $wineDeadline;
+        $pageOpen = $page->beer->open || $page->wine->open;
 
+        if ($pageOpen && $deadline === null) {
             return [
-                'mode' => $deadline !== null ? 'deadline' : 'open',
-                'occasion' => $deadline,
+                'mode' => 'open',
                 'shared' => true,
                 'date' => ucfirst($page->weekday).' '.$page->label,
-                'beer' => ['date' => null, 'range' => $page->beer->range() ?? 'Stengt', 'open' => $page->beer->open],
-                'wine' => ['date' => null, 'range' => $page->wine->range() ?? 'Stengt', 'open' => $page->wine->open],
+                'beer' => $this->heroProduct($page, ProductType::Beer, $page->beer, $beerLast),
+                'wine' => $this->heroProduct($page, ProductType::Wine, $page->wine, $wineLast),
             ];
         }
 
-        $last = ($beerLast ?? $wineLast)->date;
-        $beerWin = $this->hours->on($last, ProductType::Beer);
-        $wineWin = $this->hours->on($last, ProductType::Wine);
+        $beer = $this->heroProduct($page, ProductType::Beer, $page->beer, $beerLast);
+        $wine = $this->heroProduct($page, ProductType::Wine, $page->wine, $wineLast);
 
         return [
-            'mode' => 'deadline',
-            'occasion' => $holidayName ?? $page->weekday,
-            'shared' => true,
-            'date' => $this->fullDate($last),
-            'beer' => ['date' => null, 'range' => $beerWin->range() ?? 'Stengt', 'open' => $beerWin->open],
-            'wine' => ['date' => null, 'range' => $wineWin->range() ?? 'Stengt', 'open' => $wineWin->open],
+            'mode' => $pageOpen ? 'deadline' : 'closed',
+            'occasion' => $pageOpen ? $deadline : ($holidayName ?? $page->weekday),
+            'heading' => ucfirst($holidayName ?? $page->weekday).' · '.$page->label,
+            'shared' => $beer['iso'] === $wine['iso'],
+            'date' => $beer['date'],
+            'beer' => $beer,
+            'wine' => $wine,
+        ];
+    }
+
+    /** @return array{date: string, shortDate: string, iso: string, range: string, open: bool} */
+    private function heroProduct(DatePage $page, ProductType $type, SalesWindow $window, ?LastSale $last): array
+    {
+        if ($window->open) {
+            return [
+                'date' => $this->fullDate($page->date),
+                'shortDate' => ucfirst($page->date->locale('nb')->isoFormat('dddd D. MMM')),
+                'iso' => $page->date->toDateString(),
+                'range' => $window->range() ?? 'Stengt',
+                'open' => true,
+            ];
+        }
+
+        $date = $last?->date ?? $page->date;
+        $on = $this->hours->on($date, $type);
+
+        return [
+            'date' => $this->fullDate($date),
+            'shortDate' => ucfirst($date->locale('nb')->isoFormat('dddd D. MMM')),
+            'iso' => $date->toDateString(),
+            'range' => $on->range() ?? 'Stengt',
+            'open' => $on->open,
         ];
     }
 

@@ -64,6 +64,28 @@ class DayClassifier
         };
     }
 
+    public function observanceName(CarbonImmutable $date): ?string
+    {
+        return match (true) {
+            $date->month === 3 && $date->day === 8 => 'kvinnedagen',
+            $date->month === 5 && $date->day === 8 => 'frigjøringsdagen',
+            $this->isEasterRelative($date, -49) => 'fastelavn',
+            $this->isEasterRelative($date, -7) => 'palmesøndag',
+            $this->isLastSundayOfOctober($date) => 'bots- og bededag',
+            $this->isFirstSundayOfNovember($date) => 'allehelgensdag',
+            default => null,
+        };
+    }
+
+    public function namedDay(CarbonImmutable $date): ?string
+    {
+        if ($this->isNamedHoliday($date)) {
+            return $this->name($date);
+        }
+
+        return $this->eveName($date) ?? $this->observanceName($date);
+    }
+
     public function dateOf(int $year, string $key): ?CarbonImmutable
     {
         foreach ($this->byDate[$year] ??= $this->buildMap($year) as $ymd => $holiday) {
@@ -86,6 +108,23 @@ class DayClassifier
         }
 
         return $date->isSunday() ? 'Søndag' : null;
+    }
+
+    private function isEasterRelative(CarbonImmutable $date, int $offset): bool
+    {
+        $easter = $this->dateOf($date->year, 'easter');
+
+        return $easter !== null && $easter->addDays($offset)->isSameDay($date);
+    }
+
+    private function isLastSundayOfOctober(CarbonImmutable $date): bool
+    {
+        return $date->month === 10 && $date->isSunday() && $date->addDays(7)->month === 11;
+    }
+
+    private function isFirstSundayOfNovember(CarbonImmutable $date): bool
+    {
+        return $date->month === 11 && $date->isSunday() && $date->day <= 7;
     }
 
     /** @param list<string> $keys */

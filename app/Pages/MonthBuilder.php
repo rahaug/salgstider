@@ -21,6 +21,13 @@ class MonthBuilder extends PageBuilder
         return $month === false ? null : $month;
     }
 
+    public function lastChanged(int $month, CarbonImmutable $today): CarbonImmutable
+    {
+        $year = $today->month > $month ? $today->year + 1 : $today->year;
+
+        return CarbonImmutable::create($year - 1, $month, 1, 0, 0, 0, 'Europe/Oslo')->addMonth();
+    }
+
     /** @return array{prev: array{slug: string, name: string}, next: array{slug: string, name: string}} */
     private function nav(int $month): array
     {
@@ -100,9 +107,10 @@ class MonthBuilder extends PageBuilder
             'name' => ucfirst($this->classifier->name($redDay) ?? $redDay->locale('nb')->dayName),
             'date' => $this->fullDate($redDay),
             'deadline' => [
+                'shared' => $beerLast->date->isSameDay($wineLast->date),
                 'date' => $this->fullDate($beerLast->date),
-                'beer' => $this->hours->on($beerLast->date, ProductType::Beer)->range(),
-                'wine' => $this->hours->on($wineLast->date, ProductType::Wine)->range(),
+                'beer' => ['date' => $beerLast->date->locale('nb')->isoFormat('D. MMMM'), 'range' => $this->hours->on($beerLast->date, ProductType::Beer)->range()],
+                'wine' => ['date' => $wineLast->date->locale('nb')->isoFormat('D. MMMM'), 'range' => $this->hours->on($wineLast->date, ProductType::Wine)->range()],
             ],
         ];
     }

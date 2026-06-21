@@ -10,13 +10,34 @@
     <tbody>
         @foreach ($rows as $row)
             <tr>
-                <td class="border-b border-zinc-100 py-2.5 dark:border-zinc-900">
+                <td class="border-b border-zinc-100 py-2.5 dark:border-zinc-900 w-1/2">
                     <a href="/{{ $row['slug'] }}" class="font-medium text-zinc-900 transition hover:text-red-700 dark:text-zinc-100 dark:hover:text-red-400">{{ $row['name'] }}</a>
                     <span class="block text-sm text-zinc-500 dark:text-zinc-400">{{ $row['date'] }}</span>
                 </td>
-                <td class="border-b border-zinc-100 py-2.5 text-right dark:border-zinc-900">
-                    <span class="block font-semibold text-zinc-900 dark:text-zinc-100">{{ $row['deadline']['date'] }}</span>
-                    <span class="mt-0.5 flex justify-end gap-5 text-sm tabular-nums text-zinc-500 dark:text-zinc-400"><span>Øl {{ $row['deadline']['beer'] }}</span><span>Vin {{ $row['deadline']['wine'] }}</span></span>
+                <td class="border-b border-zinc-100 py-2.5 w-1/2 dark:border-zinc-900 pl-2">
+                    @if ($row['deadline']['shared'])
+                        <span class="block font-semibold text-zinc-900 dark:text-zinc-100 ">{{ $row['deadline']['date'] }}</span>
+                        <span class="mt-0.5 flex gap-4 text-sm tabular-nums text-zinc-500 dark:text-zinc-400">
+                            <span class="flex gap-2">
+                                <span>Øl</span>
+                                <span>{{ $row['deadline']['beer']['range'] }}</span>
+                            </span>
+                            <span class="flex gap-2">
+                                <span>Vin</span>
+                                <span>{{ $row['deadline']['wine']['range'] }}</span>
+                            </span>
+
+                        </span>
+                    @else
+                        <span class="flex items-baseline justify-between gap-3 text-sm">
+                            <span class="font-medium text-zinc-600 dark:text-zinc-300">Øl</span>
+                            <span class="whitespace-nowrap text-zinc-500 dark:text-zinc-400"><span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ $row['deadline']['beer']['date'] }}</span> · <span class="tabular-nums">{{ $row['deadline']['beer']['range'] }}</span></span>
+                        </span>
+                        <span class="mt-1 flex items-baseline justify-between gap-3 text-sm">
+                            <span class="font-medium text-zinc-600 dark:text-zinc-300">Vin</span>
+                            <span class="whitespace-nowrap text-zinc-500 dark:text-zinc-400"><span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ $row['deadline']['wine']['date'] }}</span> · <span class="tabular-nums">{{ $row['deadline']['wine']['range'] }}</span></span>
+                        </span>
+                    @endif
                 </td>
             </tr>
         @endforeach

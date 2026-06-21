@@ -83,6 +83,14 @@ class Themes
     }
 
     /** @param array<string, mixed> $theme */
+    public function lastChanged(array $theme, CarbonImmutable $today): CarbonImmutable
+    {
+        $year = $this->upcomingYear($theme, $today);
+
+        return $this->classifier->dateOf($year - 1, $theme['last'])->addDay();
+    }
+
+    /** @param array<string, mixed> $theme */
     private function upcomingYear(array $theme, CarbonImmutable $today): int
     {
         $year = $today->year;

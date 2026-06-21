@@ -65,6 +65,17 @@ class DateSlug
         }
     }
 
+    public function lastChanged(CarbonImmutable $from): CarbonImmutable
+    {
+        $year = $this->nextOccurrence($from)->year - 1;
+
+        while (! checkdate($this->month, $this->day, $year)) {
+            $year--;
+        }
+
+        return CarbonImmutable::create($year, $this->month, $this->day, 0, 0, 0, 'Europe/Oslo')->addDay();
+    }
+
     /** @return list<self> */
     public static function all(): array
     {
