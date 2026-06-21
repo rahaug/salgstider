@@ -21,6 +21,18 @@ class MonthBuilder extends PageBuilder
         return $month === false ? null : $month;
     }
 
+    /** @return array{prev: array{slug: string, name: string}, next: array{slug: string, name: string}} */
+    private function nav(int $month): array
+    {
+        $prev = $month === 1 ? 12 : $month - 1;
+        $next = $month === 12 ? 1 : $month + 1;
+
+        return [
+            'prev' => ['slug' => self::MONTHS[$prev], 'name' => ucfirst(self::MONTHS[$prev])],
+            'next' => ['slug' => self::MONTHS[$next], 'name' => ucfirst(self::MONTHS[$next])],
+        ];
+    }
+
     /** @return array<string, mixed> */
     public function build(int $month): array
     {
@@ -45,12 +57,14 @@ class MonthBuilder extends PageBuilder
         }
 
         $heading = ucfirst($name);
+        $nav = $this->nav($month);
 
         if ($redDays === []) {
             return [
                 'name' => $name,
                 'heading' => $heading,
                 'year' => $year,
+                'nav' => $nav,
                 'state' => 'empty',
                 'canonical' => url('/'.$name),
                 'description' => "Det er ingen røde dager i {$name} {$year} – vanlige åpningstider for ølsalg i butikk og Vinmonopolet hele måneden.",
@@ -63,6 +77,7 @@ class MonthBuilder extends PageBuilder
             'name' => $name,
             'heading' => $heading,
             'year' => $year,
+            'nav' => $nav,
             'state' => 'avvik',
             'canonical' => url('/'.$name),
             'description' => "Røde dager og salgstider for øl og Vinmonopolet i {$name} {$year}.",

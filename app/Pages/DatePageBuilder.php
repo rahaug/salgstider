@@ -56,6 +56,7 @@ class DatePageBuilder extends PageBuilder
             'eyebrow' => ucfirst($holidayName ?? $page->weekday)." {$page->label} {$page->date->year}",
             'heading' => $holidayName ?? $page->label,
             'year' => $page->date->year,
+            'month' => MonthBuilder::MONTHS[$date->month],
             'lede' => $this->lede($page, $holidayName, $beerLast, $wineLast, $beerDeadline, $wineDeadline),
             'hero' => $this->hero($page, $holidayName, $beerLast, $wineLast, $beerDeadline, $wineDeadline),
             'canonical' => url('/'.$slug->toString()),
@@ -83,20 +84,22 @@ class DatePageBuilder extends PageBuilder
                 'occasion' => $deadline,
                 'shared' => true,
                 'date' => ucfirst($page->weekday).' '.$page->label,
-                'beer' => ['date' => null, 'range' => $page->beer->range() ?? 'Stengt'],
-                'wine' => ['date' => null, 'range' => $page->wine->range() ?? 'Stengt'],
+                'beer' => ['date' => null, 'range' => $page->beer->range() ?? 'Stengt', 'open' => $page->beer->open],
+                'wine' => ['date' => null, 'range' => $page->wine->range() ?? 'Stengt', 'open' => $page->wine->open],
             ];
         }
 
         $last = ($beerLast ?? $wineLast)->date;
+        $beerWin = $this->hours->on($last, ProductType::Beer);
+        $wineWin = $this->hours->on($last, ProductType::Wine);
 
         return [
             'mode' => 'deadline',
             'occasion' => $holidayName ?? $page->weekday,
             'shared' => true,
             'date' => $this->fullDate($last),
-            'beer' => ['date' => null, 'range' => $this->hours->on($last, ProductType::Beer)->range() ?? 'Stengt'],
-            'wine' => ['date' => null, 'range' => $this->hours->on($last, ProductType::Wine)->range() ?? 'Stengt'],
+            'beer' => ['date' => null, 'range' => $beerWin->range() ?? 'Stengt', 'open' => $beerWin->open],
+            'wine' => ['date' => null, 'range' => $wineWin->range() ?? 'Stengt', 'open' => $wineWin->open],
         ];
     }
 

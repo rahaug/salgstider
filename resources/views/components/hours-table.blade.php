@@ -13,12 +13,12 @@
     </thead>
     <tbody>
         @foreach ($rows as $row)
-            <tr @class(['bg-amber-50 dark:bg-amber-500/10' => $row['current'] ?? false])>
+            <tr @class(['bg-zinc-100 dark:bg-zinc-800/50' => $row['current'] ?? false])>
                 <td class="border-b border-zinc-100 py-1.5 dark:border-zinc-900">
                     <a href="/{{ $row['slug'] }}" @class([
-                        'font-medium transition hover:text-amber-700 dark:hover:text-amber-400',
+                        'font-medium transition hover:text-red-700 dark:hover:text-red-400',
                         'text-zinc-900 dark:text-zinc-100' => ! ($row['current'] ?? false),
-                        'font-bold text-amber-700 dark:text-amber-400' => $row['current'] ?? false,
+                        'font-bold text-zinc-900 dark:text-white' => $row['current'] ?? false,
                     ])>{{ $row['name'] }}</a>
                     <time datetime="{{ $row['iso'] }}" class="block text-sm text-zinc-500 dark:text-zinc-400">{{ $row['date'] }}</time>
                 </td>

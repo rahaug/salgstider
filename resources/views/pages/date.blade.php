@@ -20,9 +20,15 @@
         @include('partials.store-closing-note')
     @endif
 
+    <a href="/{{ $month }}" class="group mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 transition hover:text-red-700 dark:text-zinc-300 dark:hover:text-red-400">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+        Se alle røde dager i {{ $month }}
+        <span aria-hidden="true" class="transition group-hover:translate-x-0.5">→</span>
+    </a>
+
     @if ($cluster)
         <section class="mt-8">
-            <a href="/{{ $cluster['slug'] }}" class="group inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 transition hover:text-amber-700 dark:hover:text-amber-400">
+            <a href="/{{ $cluster['slug'] }}" class="group inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 transition hover:text-red-700 dark:hover:text-red-400">
                 Åpningstider i {{ $cluster['name'] }}
                 <span aria-hidden="true" class="transition group-hover:translate-x-0.5">→</span>
             </a>
