@@ -1,6 +1,11 @@
 import './bootstrap';
 import Typed from 'typed.js';
 
+document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.theme = isDark ? 'dark' : 'light';
+});
+
 const target = document.querySelector('[data-typed]');
 const sizer = document.querySelector('[data-typed-sizer]');
 
